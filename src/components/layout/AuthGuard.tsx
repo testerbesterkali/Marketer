@@ -22,7 +22,6 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
             if (currentUser && !initializedRef.current) {
                 initializedRef.current = true;
-                console.log('AuthGuard: Starting one-time initialization...');
 
                 try {
                     // 1. Failsafe for missing profile
@@ -54,25 +53,22 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
                         useWorkspaceStore.getState().fetchWorkspaces(currentUser.id)
                     ]);
 
-                    console.log('AuthGuard: Initialization complete.');
+                    // 3. Routing Check (AFTER data is loaded)
+                    if (location.pathname.startsWith('/dashboard')) {
+                        const { currentWorkspace, workspaces } = useWorkspaceStore.getState();
+                        if (!currentWorkspace && workspaces.length === 0) {
+                            console.log('AuthGuard: No workspaces found, redirecting to onboarding.');
+                            navigate('/onboarding/start');
+                        }
+                    }
                 } catch (err) {
                     console.error('AuthGuard: Initialization error:', err);
                     initializedRef.current = false; // Allow retry if it failed miserably
                 }
             }
 
-            // SKIP redirection logic if already on onboarding
-            if (currentUser && location.pathname.startsWith('/onboarding')) {
-                return;
-            }
-
-            if (currentUser && location.pathname.startsWith('/dashboard')) {
-                const { currentWorkspace, workspaces } = useWorkspaceStore.getState();
-                if (!currentWorkspace && workspaces.length === 0) {
-                    // If after init we still have no workspace, go to onboarding
-                    navigate('/onboarding/start');
-                }
-            } else if (!currentUser && !loading) {
+            // Route protection for non-logged in users
+            if (!currentUser && !loading) {
                 navigate('/login');
             }
         });

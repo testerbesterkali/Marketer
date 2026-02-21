@@ -12,7 +12,8 @@ import {
     Facebook,
     Check,
     RefreshCcw,
-    Sparkles
+    Sparkles,
+    Loader2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export const Approvals = () => {
     const [filter, setFilter] = useState('all');
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const [isEditorOpen, setIsEditorOpen] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
 
     const fetchPosts = async () => {
         if (!currentWorkspace) return;
@@ -100,6 +102,41 @@ export const Approvals = () => {
         filter === 'all' || post.platform === filter
     );
 
+    const handleGenerateContent = async () => {
+        if (!currentWorkspace?.id) return;
+        setIsGenerating(true);
+        toast.info("AI is forging your posts...", { description: "This will consume credits. Generating images and captions takes about a minute." });
+
+        try {
+            const { error, data } = await supabase.functions.invoke('generate-initial-posts', {
+                body: { workspace_id: currentWorkspace.id }
+            });
+
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+
+            toast.success("Content generation complete! Refreshing...");
+            fetchPosts();
+        } catch (err: any) {
+            console.error('FULL ERROR:', err);
+            let errorMessage = err.message || "Could not generate content right now.";
+
+            // Try to extract body from FunctionsHttpError
+            if (err.context?.body) {
+                try {
+                    const body = typeof err.context.body === 'string' ? JSON.parse(err.context.body) : err.context.body;
+                    if (body.error) errorMessage = body.error;
+                } catch (e) {
+                    errorMessage = err.context.body;
+                }
+            }
+
+            toast.error("Generation failed", { description: errorMessage });
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
     if (loading && posts.length === 0) return (
         <div className="flex-1 flex items-center justify-center">
             <RefreshCcw className="h-8 w-8 text-indigo-600 animate-spin" />
@@ -161,12 +198,27 @@ export const Approvals = () => {
 
             {/* Posts Grid */}
             {filteredPosts.length === 0 ? (
-                <Card className="rounded-[2.5rem] border-dashed border-2 border-gray-100 py-24 text-center">
+                <Card className="rounded-[2.5rem] border-dashed border-2 border-gray-100 py-24 text-center overflow-hidden relative">
+                    {isGenerating && (
+                        <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center">
+                            <Loader2 className="h-12 w-12 text-indigo-600 animate-spin mb-4" />
+                            <h3 className="text-xl font-bold text-gray-900">Forging Content...</h3>
+                            <p className="text-gray-500 font-medium max-w-sm mx-auto mt-2">Our AI is currently writing viral captions and generating custom imagery for your brand. This takes about 30 seconds.</p>
+                        </div>
+                    )}
                     <div className="h-20 w-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
                         <Sparkles className="h-10 w-10 text-gray-300" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">No posts pending approval</h3>
-                    <p className="text-gray-400 mt-2">Try generating more content or adjusting your filters.</p>
+                    <p className="text-gray-400 mt-2 mb-8">Ready to turn your topics into actionable, ready-to-publish content?</p>
+                    <Button
+                        onClick={handleGenerateContent}
+                        disabled={isGenerating}
+                        className="h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-2xl shadow-lg shadow-indigo-100 mx-auto"
+                    >
+                        <Sparkles className="h-5 w-5 mr-2" />
+                        Generate AI Content
+                    </Button>
                 </Card>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -38,8 +38,8 @@ export const DashboardOverview = () => {
     const { currentWorkspace, brandProfile } = useWorkspaceStore();
     const [stats, setStats] = useState({
         totalPosts: 0,
-        pendingApprovals: 0,
-        scheduledPosts: 0,
+        pendingPosts: 0,
+        pendingTopics: 0,
         activeIntegrations: 0
     });
 
@@ -47,21 +47,28 @@ export const DashboardOverview = () => {
         if (!currentWorkspace) return;
 
         const fetchStats = async () => {
-            const { count: postsCount } = await supabase
+            const { count: publishedCount } = await supabase
                 .from('posts')
                 .select('*', { count: 'exact', head: true })
-                .eq('workspace_id', currentWorkspace.id);
+                .eq('workspace_id', currentWorkspace.id)
+                .in('status', ['scheduled', 'published']);
 
-            const { count: pendingCount } = await supabase
+            const { count: pendingPostsCount } = await supabase
+                .from('posts')
+                .select('*', { count: 'exact', head: true })
+                .eq('workspace_id', currentWorkspace.id)
+                .in('status', ['draft', 'generating', 'failed']);
+
+            const { count: pendingTopicsCount } = await supabase
                 .from('topics')
                 .select('*', { count: 'exact', head: true })
                 .eq('workspace_id', currentWorkspace.id)
                 .eq('approved', false);
 
             setStats({
-                totalPosts: postsCount || 0,
-                pendingApprovals: pendingCount || 0,
-                scheduledPosts: 0,
+                totalPosts: publishedCount || 0,
+                pendingPosts: pendingPostsCount || 0,
+                pendingTopics: pendingTopicsCount || 0,
                 activeIntegrations: 0
             });
         };
@@ -109,8 +116,8 @@ export const DashboardOverview = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 {[
-                    { label: 'Pending Approvals', value: stats.pendingApprovals, icon: CheckCircle, color: 'text-orange-600', bg: 'bg-orange-50' },
-                    { label: 'Scheduled Posts', value: stats.scheduledPosts, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { label: 'Pending Topics', value: stats.pendingTopics, icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                    { label: 'Draft Posts', value: stats.pendingPosts, icon: CheckCircle, color: 'text-orange-600', bg: 'bg-orange-50' },
                     { label: 'Total Published', value: stats.totalPosts, icon: TrendingUp, color: 'text-green-600', bg: 'bg-green-50' },
                     { label: 'Integrations', value: stats.activeIntegrations, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
                 ].map((stat) => (

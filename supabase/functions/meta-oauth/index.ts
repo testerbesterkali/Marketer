@@ -38,7 +38,7 @@ serve(async (req) => {
         const tokenData = await tokenResponse.json()
 
         if (tokenData.error) {
-            throw new Error(`Token exchange failed: ${tokenData.error.message}`)
+            throw new Error(`Token_Exchange_Failed: ${tokenData.error.message}`)
         }
 
         const accessToken = tokenData.access_token
@@ -49,13 +49,13 @@ serve(async (req) => {
         const meData = await meResponse.json()
 
         if (meData.error) {
-            throw new Error(`Failed to fetch pages: ${meData.error.message}`)
+            throw new Error(`MeData_Fetch_Failed: ${meData.error.message}`)
         }
 
         // Grab the first page for simplicity in this V1
         const page = meData.data[0]
         if (!page) {
-            throw new Error('No Facebook Page found linked to this account')
+            throw new Error('No_Facebook_Page_Linked_To_Account')
         }
 
         const pageId = page.id
@@ -72,7 +72,7 @@ serve(async (req) => {
             .upsert({
                 workspace_id,
                 platform,
-                access_token: accessToken, // Ideally we store the Page Access Token or a Long-Lived Token
+                access_token: pageAccessToken, // Storing the Page Access Token for IG API calls
                 meta_page_id: pageId,
                 instagram_business_id: igBusinessId,
                 account_name: page.name,
@@ -80,7 +80,7 @@ serve(async (req) => {
                 updated_at: new Date().toISOString()
             }, { onConflict: 'workspace_id,platform' })
 
-        if (upsertError) throw upsertError
+        if (upsertError) throw new Error(`Supabase_Upsert_Failed_${upsertError.code}: ${upsertError.message}`)
 
         // 4. Redirect back to the app
         // We assume the app is running on the same domain or we have a VITE_SITE_URL
@@ -93,14 +93,17 @@ serve(async (req) => {
             },
         })
 
-    } catch (error) {
+    } catch (error: any) {
         console.error('[MetaOAuth] Error:', error)
         const siteUrl = Deno.env.get('SITE_URL') || 'http://localhost:5173'
+        // Ensure error is a string
+        const errMsg = error.message || 'Unknown_Error'
+
         return new Response(null, {
             status: 302,
             headers: {
                 ...corsHeaders,
-                'Location': `${siteUrl}/dashboard/integrations?error=${encodeURIComponent(error.message)}`
+                'Location': `${siteUrl}/dashboard/integrations?error=${encodeURIComponent(errMsg)}`
             },
         })
     }

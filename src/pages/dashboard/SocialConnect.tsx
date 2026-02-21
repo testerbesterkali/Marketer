@@ -31,6 +31,7 @@ export const SocialConnect = () => {
     const { currentWorkspace } = useWorkspaceStore();
     const [connections, setConnections] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [authError, setAuthError] = useState<string | null>(null);
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);
@@ -42,8 +43,9 @@ export const SocialConnect = () => {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
         if (error) {
+            setAuthError(error);
             toast.error('Connection failed', { description: error });
-            window.history.replaceState({}, document.title, window.location.pathname);
+            // Do NOT remove from URL immediately so we can debug it
         }
     }, []);
 
@@ -87,7 +89,14 @@ export const SocialConnect = () => {
 
             const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
 
-            window.location.href = authUrl;
+            if (platformId === 'instagram') {
+                toast("Connecting via Meta", {
+                    description: "Instagram Business accounts must be authenticated through their linked Facebook Page."
+                });
+                window.location.href = authUrl;
+            } else {
+                window.location.href = authUrl;
+            }
             return;
         }
 
@@ -122,7 +131,7 @@ export const SocialConnect = () => {
     if (loading || !currentWorkspace) return (
         <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] space-y-4">
             <RefreshCcw className="h-12 w-12 text-indigo-600 animate-spin" />
-            <p className="text-gray-400 font-medium animate-pulse">Initializing workspace...</p>
+            <p className="text-gray-400 font-medium animate-pulse">Loading social connections...</p>
         </div>
     );
 
@@ -139,6 +148,22 @@ export const SocialConnect = () => {
                     <span className="text-sm font-bold text-indigo-900">Enterprise Grade Encryption Active</span>
                 </div>
             </div>
+
+            {authError && (
+                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-r-xl">
+                    <div className="flex">
+                        <div className="flex-shrink-0">
+                            <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
+                        </div>
+                        <div className="ml-3">
+                            <h3 className="text-sm font-bold text-red-800">Connection Error Code</h3>
+                            <div className="mt-2 text-sm text-red-700">
+                                <p>{authError}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Grid of Platforms */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
