@@ -1,5 +1,4 @@
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import {
     Home,
     Calendar,
@@ -13,7 +12,8 @@ import {
     LogOut,
     ChevronDown,
     Plus,
-    Share2
+    Share2,
+    Zap
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
@@ -25,7 +25,8 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from '@/components/ui/button';
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 const navItems = [
     { icon: Home, label: 'Overview', path: '/dashboard' },
@@ -43,118 +44,191 @@ const secondaryNav = [
     { icon: Settings, label: 'Settings', path: '/dashboard/settings' },
 ];
 
+const utilityNav = [
+    { icon: Zap, label: 'Refer & Earn', path: '/dashboard/refer' },
+    { icon: Users, label: 'Join Community', path: '/dashboard/community' },
+    { icon: Shield, label: 'Help & Learn', path: '/dashboard/help' },
+];
+
 export const Sidebar = () => {
-    const { user, profile, signOut } = useAuthStore();
+    const { profile, signOut } = useAuthStore();
     const { currentWorkspace } = useWorkspaceStore();
-    const navigate = useNavigate();
+
+    const credits = profile?.credits_remaining ?? 0;
+    const maxCredits = 200;
+    const creditPercentage = (credits / maxCredits) * 100;
 
     return (
-        <aside className="w-72 bg-white border-r border-gray-100 flex flex-col h-screen fixed left-0 top-0 z-40">
+        <aside
+            className="w-72 bg-white border-r border-gray-100 flex flex-col h-screen fixed left-0 top-0 z-40"
+            role="complementary"
+            aria-label="Main Sidebar"
+        >
             {/* Workspace Switcher */}
             <div className="p-6">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                        <button className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors group">
+                        <button
+                            className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors group"
+                            aria-label={`Switch workspace. Current: ${currentWorkspace?.name || 'Select Workspace'}`}
+                        >
                             <div className="flex items-center space-x-3 text-left">
                                 <div className="h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-                                    <span className="text-white font-bold text-xl">TRACKLY</span>
+                                    <span className="text-white font-bold text-xl"> TRACKLY </span>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold text-gray-900 truncate">
-                                        {currentWorkspace?.name || 'My Brand'}
-                                    </h3>
-                                    <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
-                                        {profile?.plan || 'Basic'} Plan
+                                    <p className="text-sm font-bold text-gray-900 truncate w-32">
+                                        {currentWorkspace?.name || 'Select Workspace'}
+                                    </p>
+                                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-tighter">
+                                        Personal Workspace
                                     </p>
                                 </div>
                             </div>
-                            <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-gray-600 transition-colors" />
+                            <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
                         </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-64" align="start">
-                        <DropdownMenuItem className="py-3 px-4 flex items-center space-x-2">
-                            <Plus className="h-4 w-4" />
-                            <span>Create New Workspace</span>
+                    <DropdownMenuContent align="start" className="w-[240px] rounded-2xl p-2">
+                        <DropdownMenuItem className="rounded-xl font-medium p-3">
+                            <Plus className="h-4 w-4 mr-2" />
+                            New Workspace
                         </DropdownMenuItem>
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
 
-            {/* Main Nav */}
-            <nav className="flex-1 px-4 space-y-2 overflow-y-auto mt-2">
-                {navItems.map((item) => (
-                    <NavLink
-                        key={item.label}
-                        to={item.path}
-                        end={item.path === '/dashboard'}
-                        className={({ isActive }) =>
-                            cn(
-                                "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group",
+            {/* Navigation */}
+            <nav className="flex-1 px-4 space-y-8 overflow-y-auto" aria-label="Primary Navigation">
+                <div className="space-y-1">
+                    <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Main Menu</p>
+                    {navItems.map((item) => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={({ isActive }) => cn(
+                                "flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-200 group",
                                 isActive
-                                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                    : "text-gray-500 hover:bg-indigo-50 hover:text-indigo-600"
-                            )
-                        }
-                    >
-                        <item.icon className="h-5 w-5" />
-                        <span className="font-semibold text-sm">{item.label}</span>
-                    </NavLink>
-                ))}
+                                    ? "bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50"
+                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                            )}
+                        >
+                            <item.icon className={cn(
+                                "h-5 w-5 transition-colors",
+                                "group-hover:text-indigo-600"
+                            )} />
+                            <span>{item.label}</span>
+                        </NavLink>
+                    ))}
+                </div>
 
-                <div className="pt-8 pb-4">
-                    <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">Account</p>
+                <div className="space-y-1">
+                    <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Organization</p>
                     {secondaryNav.map((item) => (
+                        <NavLink
+                            key={item.path}
+                            to={item.path}
+                            className={({ isActive }) => cn(
+                                "flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-200 group",
+                                isActive
+                                    ? "bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50"
+                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                            )}
+                        >
+                            <item.icon className="h-5 w-5 group-hover:text-indigo-600 transition-colors" />
+                            <span>{item.label}</span>
+                        </NavLink>
+                    ))}
+                </div>
+
+                <div className="space-y-1">
+                    <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Support & Team</p>
+                    {utilityNav.map((item) => (
                         <NavLink
                             key={item.label}
                             to={item.path}
-                            className={({ isActive }) =>
-                                cn(
-                                    "flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 group",
-                                    isActive
-                                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-200"
-                                        : "text-gray-500 hover:bg-indigo-50 hover:text-indigo-600"
-                                )
-                            }
+                            className={({ isActive }) => cn(
+                                "flex items-center space-x-3 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-200 group",
+                                isActive
+                                    ? "bg-indigo-50 text-indigo-600 shadow-sm shadow-indigo-100/50"
+                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                            )}
                         >
-                            <item.icon className="h-5 w-5" />
-                            <span className="font-semibold text-sm">{item.label}</span>
+                            <item.icon className="h-5 w-5 group-hover:text-indigo-600 transition-colors" />
+                            <span>{item.label}</span>
                         </NavLink>
                     ))}
+                </div>
+
+                {/* Credit Widget */}
+                <div className="px-4 pt-4">
+                    <div className="bg-indigo-600 rounded-3xl p-6 relative overflow-hidden shadow-xl shadow-indigo-100 group">
+                        <div className="absolute -top-4 -right-4 h-24 w-24 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
+                        <div className="relative z-10 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div className="h-10 w-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md">
+                                    <Zap className="h-5 w-5 text-white" />
+                                </div>
+                                <Badge className="bg-white/20 text-white border-none text-[10px] font-black tracking-tighter cursor-default">
+                                    {profile?.plan || 'Free Plan'}
+                                </Badge>
+                            </div>
+                            <div>
+                                <div className="flex items-end justify-between mb-2">
+                                    <p className="text-white text-2xl font-black">{credits}</p>
+                                    <p className="text-white/60 text-[10px] font-bold uppercase tracking-widest">Credits Left</p>
+                                </div>
+                                <Progress value={creditPercentage} className="h-2 bg-black/20" />
+                            </div>
+                            <button className="w-full bg-white text-indigo-600 h-10 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-50 transition-colors shadow-lg shadow-black/5">
+                                Upgrade Now
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </nav>
 
             {/* User Profile */}
-            <div className="p-6 border-t border-gray-100 bg-gray-50/50">
-                <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                        <Avatar className="h-10 w-10 ring-2 ring-indigo-50">
-                            <AvatarImage src={profile?.avatar_url} />
-                            <AvatarFallback className="bg-indigo-100 text-indigo-700 font-bold uppercase">
-                                {profile?.full_name?.charAt(0) || user?.email?.charAt(0)}
-                            </AvatarFallback>
-                        </Avatar>
-                        <div className="flex flex-col">
-                            <span className="text-sm font-bold text-gray-900 truncate max-w-[100px]">
-                                {profile?.full_name || 'User'}
-                            </span>
-                            <span className="text-[10px] font-medium text-gray-400 uppercase">
-                                Free Trial
-                            </span>
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => signOut()}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                    >
-                        <LogOut className="h-5 w-5" />
-                    </button>
-                </div>
-
-                <Button className="w-full mt-4 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-bold h-11 rounded-xl shadow-md border-none group">
-                    Upgrade Pro
-                    <Target className="ml-2 h-4 w-4 group-hover:scale-110 transition-transform" />
-                </Button>
+            <div className="p-6 border-t border-gray-100">
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button
+                            className="w-full flex items-center justify-between p-2 rounded-2xl hover:bg-gray-50 transition-colors group"
+                            aria-label={`User menu for ${profile?.full_name || 'My Brand'}`}
+                        >
+                            <div className="flex items-center space-x-3">
+                                <Avatar className="h-10 w-10 border-2 border-white shadow-sm">
+                                    <AvatarImage src={profile?.avatar_url} />
+                                    <AvatarFallback className="bg-indigo-100 text-indigo-600 font-bold">
+                                        {profile?.full_name?.substring(0, 2).toUpperCase() || 'BF'}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div className="text-left">
+                                    <p className="text-sm font-bold text-gray-900 truncate w-24">
+                                        {profile?.full_name || 'My Brand'}
+                                    </p>
+                                    <p className="text-[10px] font-medium text-gray-500">
+                                        {profile?.plan || 'Free'} Plan
+                                    </p>
+                                </div>
+                            </div>
+                            <MoreVertical className="h-4 w-4 text-gray-400 group-hover:text-gray-900 transition-colors" />
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-[200px] rounded-2xl p-2">
+                        <DropdownMenuItem
+                            className="rounded-xl font-medium p-3 text-red-600 hover:bg-red-50 hover:text-red-600 cursor-pointer"
+                            onClick={() => signOut()}
+                        >
+                            <LogOut className="h-4 w-4 mr-2" />
+                            Sign Out
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
             </div>
         </aside>
     );
 };
+
+export const MoreVertical = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" /></svg>
+);

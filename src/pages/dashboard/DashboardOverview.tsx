@@ -80,15 +80,25 @@ export const DashboardOverview = () => {
                         Review and approve them to start generating posts.
                     </p>
                     <div className="pt-4 flex items-center space-x-4">
-                        <button className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg">
+                        <button
+                            className="bg-white text-indigo-600 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-colors shadow-lg"
+                            aria-label="Review your current content plan"
+                        >
                             Review Content Plan
                         </button>
-                        <button className="bg-indigo-500/30 text-white border border-white/20 px-6 py-3 rounded-xl font-bold hover:bg-indigo-500/40 transition-colors backdrop-blur-sm">
+                        <button
+                            className="bg-indigo-500/30 text-white border border-white/20 px-6 py-3 rounded-xl font-bold hover:bg-indigo-500/40 transition-colors backdrop-blur-sm"
+                            aria-label="View detailed analytics"
+                        >
                             View Analytics
                         </button>
                     </div>
                 </div>
-                <div className="absolute top-0 right-0 p-8 h-full flex flex-col justify-center opacity-20 transform translate-x-1/4">
+                <div
+                    className="absolute top-0 right-0 p-8 h-full flex flex-col justify-center opacity-20 transform translate-x-1/4"
+                    role="img"
+                    aria-label="Decorative background illustration"
+                >
                     <BarChart3 className="h-64 w-64" />
                 </div>
             </div>
@@ -129,7 +139,10 @@ export const DashboardOverview = () => {
                             <CardTitle className="text-xl font-extrabold text-gray-900">Reach Overview</CardTitle>
                             <p className="text-sm text-gray-500 font-medium mt-1">Total impressions across all platforms</p>
                         </div>
-                        <select className="bg-gray-50 border-none rounded-lg px-4 py-2 text-sm font-bold text-gray-600 focus:ring-2 focus:ring-indigo-100 outline-none">
+                        <select
+                            className="bg-gray-50 border-none rounded-lg px-4 py-2 text-sm font-bold text-gray-600 focus:ring-2 focus:ring-indigo-100 outline-none"
+                            aria-label="Select reach overview time range"
+                        >
                             <option>Last 7 Days</option>
                             <option>Last 30 Days</option>
                         </select>

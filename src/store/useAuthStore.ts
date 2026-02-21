@@ -33,4 +33,15 @@ export const useAuthStore = create<AuthState>((set) => ({
             set({ profile: data });
         }
     },
+    deductCredits: (amount: number) => {
+        const { profile } = useAuthStore.getState();
+        if (profile) {
+            set({
+                profile: {
+                    ...profile,
+                    credits_remaining: (profile.credits_remaining || 0) - amount
+                }
+            });
+        }
+    },
 }));
