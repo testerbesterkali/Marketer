@@ -1,35 +1,68 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from '@/components/ui/toaster';
+import { Login } from '@/pages/auth/Login';
+import { Signup } from '@/pages/auth/Signup';
+import { UrlInputScreen } from '@/pages/onboarding/UrlInputScreen';
+import { BrandAnalyzingScreen } from '@/pages/onboarding/BrandAnalyzingScreen';
+import { BrandReviewScreen } from '@/pages/onboarding/BrandReviewScreen';
+import { StyleSelectionScreen } from '@/pages/onboarding/StyleSelectionScreen';
+import { ContentPlanScreen } from '@/pages/onboarding/ContentPlanScreen';
+import { TopicGenerationScreen } from '@/pages/onboarding/TopicGenerationScreen';
+import { AuthGuard } from '@/components/layout/AuthGuard';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { DashboardOverview } from '@/pages/dashboard/DashboardOverview';
+
+const queryClient = new QueryClient();
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    <QueryClientProvider client={queryClient}>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+
+          {/* Protected Routes */}
+          <Route
+            path="/dashboard/*"
+            element={
+              <AuthGuard>
+                <Routes>
+                  <Route element={<DashboardLayout />}>
+                    <Route index element={<DashboardOverview />} />
+                    <Route path="calendar" element={<div className="p-8 text-2xl font-bold">Content Calendar</div>} />
+                    <Route path="approvals" element={<div className="p-8 text-2xl font-bold">Content Approvals</div>} />
+                    <Route path="brand-kit" element={<div className="p-8 text-2xl font-bold">Brand Identity Kit</div>} />
+                    <Route path="content-plan" element={<div className="p-8 text-2xl font-bold">Content Strategy</div>} />
+                    <Route path="insights" element={<div className="p-8 text-2xl font-bold">Performance Insights</div>} />
+                  </Route>
+                </Routes>
+              </AuthGuard>
+            }
+          />
+          <Route
+            path="/onboarding/*"
+            element={
+              <AuthGuard>
+                <Routes>
+                  <Route path="start" element={<UrlInputScreen />} />
+                  <Route path="analyzing" element={<BrandAnalyzingScreen />} />
+                  <Route path="review" element={<BrandReviewScreen />} />
+                  <Route path="style" element={<StyleSelectionScreen />} />
+                  <Route path="plan" element={<ContentPlanScreen />} />
+                  <Route path="generating" element={<TopicGenerationScreen />} />
+                </Routes>
+              </AuthGuard>
+            }
+          />
+
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        </Routes>
+        <Toaster />
+      </Router>
+    </QueryClientProvider>
+  );
 }
 
-export default App
+export default App;
