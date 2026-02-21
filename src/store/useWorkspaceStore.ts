@@ -52,9 +52,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
             set({ workspaces: data || [] });
 
-            // If no workspace is selected, pick the first one
+            // If no workspace is selected, pick the most completed one
             if (!get().currentWorkspace && data && data.length > 0) {
-                get().fetchWorkspace(data[0].id);
+                const sorted = [...data].sort((a, b) => (b.onboarding_step || 0) - (a.onboarding_step || 0));
+                get().fetchWorkspace(sorted[0].id);
             }
         } catch (err) {
             console.error('WorkspaceStore: fetchWorkspaces error:', err);

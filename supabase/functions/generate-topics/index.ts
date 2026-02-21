@@ -16,9 +16,19 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("Missing Authorization header");
+    }
+
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+      {
+        global: {
+          headers: { Authorization: authHeader },
+        },
+      }
     );
 
     const { workspace_id } = await req.json() as GenerateTopicsRequest;
@@ -37,15 +47,25 @@ Deno.serve(async (req: Request) => {
       .from("brand_profiles")
       .select("*")
       .eq("workspace_id", workspace_id)
-      .single();
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
     const { data: contentPlan } = await supabaseClient
       .from("content_plans")
       .select("*")
       .eq("workspace_id", workspace_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const { data: workspace } = await supabaseClient
+      .from("workspaces")
+      .select("owner_id")
+      .eq("id", workspace_id)
       .single();
 
-    if (!brandProfile || !contentPlan) throw new Error("Brand profile or content plan not found");
+    if (!brandProfile || !contentPlan || !workspace) throw new Error("Brand profile, content plan, or workspace not found");
 
     // 2. Generate Topics using OpenAI
     await broadcast("topics");
@@ -62,21 +82,27 @@ Deno.serve(async (req: Request) => {
         messages: [
           {
             role: "system",
-            content: "You are a social media strategist. Generate 14 content topics (2 weeks) based on the brand profile and content plan."
+            content: "You are a social media strategist. Generate 14 content topics (2 weeks) based on the brand profile and content plan. Output ONLY a valid JSON object."
           },
           {
             role: "user",
             content: `Brand: ${brandProfile.business_name}
             Voice: ${brandProfile.brand_voice}
-            Platforms: ${Object.keys(contentPlan.platforms).join(", ")}
+            Platforms: ${Object.keys(contentPlan.platforms || {}).join(", ")}
             
             Generate 14 topics. For each topic, provide: title, description, content_pillar, and suggested_platforms (array).
-            Response format: { "topics": [...] }`
+            Response format MUST be exactly: { "topics": [...] }`
           }
         ],
         response_format: { type: "json_object" }
       }),
     });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("OpenAI Error:", errorText);
+      throw new Error(`OpenAI API Error: ${errorText}`);
+    }
 
     const data = await response.json();
     const topics = JSON.parse(data.choices[0].message.content).topics;
@@ -103,7 +129,7 @@ Deno.serve(async (req: Request) => {
     await supabaseClient
       .from("users_profile")
       .update({ onboarding_completed: true })
-      .eq("id", brandProfile.owner_id); // This might fail if we don't have owner_id, but it's okay for now.
+      .eq("id", workspace.owner_id);
 
     await broadcast("completed");
 
@@ -111,7 +137,7 @@ Deno.serve(async (req: Request) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : String(error) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });

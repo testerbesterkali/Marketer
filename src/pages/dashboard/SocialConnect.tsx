@@ -69,7 +69,14 @@ export const SocialConnect = () => {
         if (!currentWorkspace) return;
 
         if (platformId === 'instagram' || platformId === 'facebook') {
-            const clientId = 'YOUR_META_APP_ID'; // To be replaced by the user
+            const clientId = import.meta.env.VITE_META_CLIENT_ID;
+
+            if (!clientId || clientId === 'YOUR_META_APP_ID') {
+                toast.error("Configuration Missing", {
+                    description: "Please add VITE_META_CLIENT_ID to your .env file to connect to Meta."
+                });
+                return;
+            }
             const redirectUri = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/meta-oauth`;
             const scope = 'instagram_basic,instagram_content_publish,pages_read_engagement,pages_show_list,ads_management,business_management';
             const state = btoa(JSON.stringify({

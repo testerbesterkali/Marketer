@@ -63,8 +63,7 @@ export const ContentPlanScreen = () => {
             .upsert({
                 workspace_id: workspaceId,
                 platforms: selectedPlatforms.reduce((acc, p) => ({ ...acc, [p]: { enabled: true } }), {}),
-                content_pillars: selectedTypes,
-                post_frequency: parseInt(frequency),
+                posts_per_week: { default: parseInt(frequency) },
             });
 
         if (!error) {
