@@ -31,7 +31,7 @@ import { Progress } from "@/components/ui/progress";
 const navItems = [
     { icon: Home, label: 'Overview', path: '/dashboard' },
     { icon: Calendar, label: 'Calendar', path: '/dashboard/calendar' },
-    { icon: Share2, label: 'Integrations', path: '/dashboard/integrations' },
+    { icon: Share2, label: 'Connect Socials', path: '/dashboard/integrations' },
     { icon: CheckCircle, label: 'Approvals', path: '/dashboard/approvals' },
     { icon: Target, label: 'Content Plan', path: '/dashboard/content-plan' },
     { icon: Megaphone, label: 'Paid Ads', path: '/dashboard/paid-ads' },

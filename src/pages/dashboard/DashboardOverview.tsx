@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,6 +34,7 @@ const data = [
 ];
 
 export const DashboardOverview = () => {
+    const navigate = useNavigate();
     const { currentWorkspace, brandProfile } = useWorkspaceStore();
     const [stats, setStats] = useState({
         totalPosts: 0,
@@ -87,10 +89,11 @@ export const DashboardOverview = () => {
                             Review Content Plan
                         </button>
                         <button
+                            onClick={() => navigate('/dashboard/integrations')}
                             className="bg-indigo-500/30 text-white border border-white/20 px-6 py-3 rounded-xl font-bold hover:bg-indigo-500/40 transition-colors backdrop-blur-sm"
-                            aria-label="View detailed analytics"
+                            aria-label="Connect your social media accounts"
                         >
-                            View Analytics
+                            Connect Socials
                         </button>
                     </div>
                 </div>

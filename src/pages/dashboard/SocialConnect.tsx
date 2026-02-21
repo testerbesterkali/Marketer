@@ -112,9 +112,10 @@ export const SocialConnect = () => {
         return connections.some(c => c.platform === platformId && c.connected);
     };
 
-    if (loading) return (
-        <div className="flex-1 flex items-center justify-center">
-            <RefreshCcw className="h-8 w-8 text-indigo-600 animate-spin" />
+    if (loading || !currentWorkspace) return (
+        <div className="flex-1 flex flex-col items-center justify-center min-h-[400px] space-y-4">
+            <RefreshCcw className="h-12 w-12 text-indigo-600 animate-spin" />
+            <p className="text-gray-400 font-medium animate-pulse">Initializing workspace...</p>
         </div>
     );
 

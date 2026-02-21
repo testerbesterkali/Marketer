@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase';
+import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 
 interface AuthGuardProps {
     children: React.ReactNode;
@@ -18,6 +19,20 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
 
             if (currentUser) {
                 await fetchProfile(currentUser.id);
+
+                // Also fetch the first workspace if not already set
+                const { currentWorkspace, fetchWorkspace } = useWorkspaceStore.getState();
+                if (!currentWorkspace) {
+                    const { data: workspaces } = await supabase
+                        .from('workspaces')
+                        .select('id')
+                        .eq('owner_id', currentUser.id)
+                        .limit(1);
+
+                    if (workspaces && workspaces.length > 0) {
+                        await fetchWorkspace(workspaces[0].id);
+                    }
+                }
             } else if (!loading) {
                 navigate('/login');
             }
