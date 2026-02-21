@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,9 +27,25 @@ const PLATFORMS = [
 ];
 
 export const SocialConnect = () => {
+    const { profile } = useAuthStore();
     const { currentWorkspace } = useWorkspaceStore();
     const [connections, setConnections] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const success = params.get('success');
+        const error = params.get('error');
+
+        if (success) {
+            toast.success('Social account connected successfully!');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+        if (error) {
+            toast.error('Connection failed', { description: error });
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, []);
 
     useEffect(() => {
         if (!currentWorkspace) return;
@@ -51,7 +68,23 @@ export const SocialConnect = () => {
     const handleConnect = async (platformId: string) => {
         if (!currentWorkspace) return;
 
-        // Placeholder for OAuth flow
+        if (platformId === 'instagram' || platformId === 'facebook') {
+            const clientId = 'YOUR_META_APP_ID'; // To be replaced by the user
+            const redirectUri = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/meta-oauth`;
+            const scope = 'instagram_basic,instagram_content_publish,pages_read_engagement,pages_show_list,ads_management,business_management';
+            const state = btoa(JSON.stringify({
+                workspace_id: currentWorkspace.id,
+                platform: platformId,
+                user_id: profile?.id
+            }));
+
+            const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+
+            window.location.href = authUrl;
+            return;
+        }
+
+        // Placeholder for other OAuth flows
         toast.info(`Connecting to ${platformId}...`, {
             description: "Redirecting to secure authorization page."
         });

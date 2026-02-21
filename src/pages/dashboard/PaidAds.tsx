@@ -1,5 +1,9 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useWorkspaceStore } from '@/store/useWorkspaceStore';
+import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
 import {
     Megaphone,
     Target,
@@ -11,11 +15,48 @@ import {
     MousePointer2,
     Sparkles,
     RefreshCcw,
-    Zap
+    Zap,
+    Plus
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export const PaidAds = () => {
+    const { currentWorkspace } = useWorkspaceStore();
+    const [generating, setGenerating] = useState(false);
+    const [activeAd, setActiveAd] = useState<{
+        headline: string;
+        body: string;
+        image_url: string;
+    } | null>(null);
+
+    const handleGenerateAd = async () => {
+        if (!currentWorkspace) return;
+        setGenerating(true);
+
+        try {
+            // Fetch brand profile for context
+            const { data: profile } = await supabase
+                .from('brand_profiles')
+                .select('*')
+                .eq('workspace_id', currentWorkspace.id)
+                .single();
+
+            // Simulate AI generation delay
+            await new Promise(r => setTimeout(r, 2000));
+
+            setActiveAd({
+                headline: `Scale your ${profile?.business_name || 'Brand'} with AI`,
+                body: `Boost your visibility on Meta and Google with enterprise-grade content automation. ${profile?.tagline || 'Experience the future of marketing.'}`,
+                image_url: `https://image.pollinations.ai/prompt/professional%20marketing%20ad%20for%20${encodeURIComponent(profile?.business_name || 'business')}%20sleek%20modern%20startup%20office?width=1080&height=1080&nologo=true`
+            });
+
+            toast.success('Ad variants ready for review!');
+        } catch (e) {
+            toast.error('Failed to generate ad. Try again.');
+        } finally {
+            setGenerating(false);
+        }
+    };
 
     return (
         <div className="p-8 max-w-7xl mx-auto space-y-8">
@@ -81,21 +122,34 @@ export const PaidAds = () => {
                         <CardContent className="p-8 flex-1 bg-gray-50/50 flex items-center justify-center">
                             <div className="w-full max-w-sm bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-in fade-in zoom-in-95 duration-700">
                                 <div className="p-4 flex items-center space-x-3">
-                                    <div className="h-10 w-10 rounded-full bg-indigo-600" />
+                                    <div className="h-10 w-10 rounded-full bg-indigo-600 flex items-center justify-center text-white font-black text-xs">
+                                        {currentWorkspace?.name.charAt(0) || 'B'}
+                                    </div>
                                     <div>
-                                        <p className="text-sm font-black text-gray-900">BrandForge Pro</p>
+                                        <p className="text-sm font-black text-gray-900">{currentWorkspace?.name || 'BrandForge Pro'}</p>
                                         <p className="text-[10px] text-gray-400 font-bold uppercase tracking-tighter flex items-center">
                                             Sponsored <span className="mx-1">•</span> <Monitor className="h-2 w-2" />
                                         </p>
                                     </div>
                                 </div>
                                 <div className="aspect-square bg-gray-100 overflow-hidden flex items-center justify-center">
-                                    <Sparkles className="h-12 w-12 text-gray-200" />
+                                    {activeAd ? (
+                                        <img src={activeAd.image_url} alt="Ad content" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <Sparkles className="h-12 w-12 text-gray-200" />
+                                    )}
                                 </div>
                                 <div className="p-4 bg-gray-50 flex items-center justify-between">
-                                    <div>
-                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest">BRANDFORGE.AI</p>
-                                        <p className="text-sm font-black text-gray-900 uppercase">Scale Your Content Today</p>
+                                    <div className="flex-1 mr-4">
+                                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest leading-none mb-1">
+                                            {currentWorkspace?.name.toUpperCase() || 'BRANDFORGE.AI'}
+                                        </p>
+                                        <p className="text-sm font-black text-gray-900 uppercase line-clamp-1">
+                                            {activeAd?.headline || 'Scale Your Content Today'}
+                                        </p>
+                                        <p className="text-[10px] text-gray-500 font-medium line-clamp-1 mt-0.5">
+                                            {activeAd?.body || 'Build a powerful brand presence with AI.'}
+                                        </p>
                                     </div>
                                     <Button size="sm" className="rounded-lg bg-indigo-600 hover:bg-indigo-700 font-bold h-9">
                                         Learn More
@@ -137,8 +191,22 @@ export const PaidAds = () => {
                                 </div>
                             </div>
 
-                            <Button className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg shadow-indigo-200 uppercase tracking-widest text-xs">
-                                Sync with Meta Ads
+                            <Button
+                                onClick={handleGenerateAd}
+                                disabled={generating}
+                                className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-black shadow-lg shadow-indigo-200 uppercase tracking-widest text-xs flex items-center justify-center space-x-2"
+                            >
+                                {generating ? (
+                                    <>
+                                        <RefreshCcw className="h-4 w-4 animate-spin" />
+                                        <span>Crafting...</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Sparkles className="h-4 w-4" />
+                                        <span>Generate Ad Preview</span>
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </Card>
@@ -148,6 +216,3 @@ export const PaidAds = () => {
     );
 };
 
-export const Plus = ({ className }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
-);
