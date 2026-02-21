@@ -12,6 +12,7 @@ import { TopicGenerationScreen } from '@/pages/onboarding/TopicGenerationScreen'
 import { AuthGuard } from '@/components/layout/AuthGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DashboardOverview } from '@/pages/dashboard/DashboardOverview';
+import { CalendarView } from '@/pages/dashboard/CalendarView';
 
 const queryClient = new QueryClient();
 
@@ -31,7 +32,7 @@ function App() {
                 <Routes>
                   <Route element={<DashboardLayout />}>
                     <Route index element={<DashboardOverview />} />
-                    <Route path="calendar" element={<div className="p-8 text-2xl font-bold">Content Calendar</div>} />
+                    <Route path="calendar" element={<CalendarView />} />
                     <Route path="approvals" element={<div className="p-8 text-2xl font-bold">Content Approvals</div>} />
                     <Route path="brand-kit" element={<div className="p-8 text-2xl font-bold">Brand Identity Kit</div>} />
                     <Route path="content-plan" element={<div className="p-8 text-2xl font-bold">Content Strategy</div>} />
