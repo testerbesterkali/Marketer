@@ -9,12 +9,9 @@ import {
     Palette,
     Type,
     Megaphone,
-    Users,
     Target,
-    Globe,
     Save,
     RefreshCcw,
-    Sparkles,
     Download,
     Image as ImageIcon
 } from 'lucide-react';
@@ -48,7 +45,7 @@ export const BrandKit = () => {
     const handleSave = async () => {
         if (!profile) return;
         setSaving(true);
-        const { error } = await supabase
+        await supabase
             .from('brand_profiles')
             .update(profile)
             .eq('id', profile.id);

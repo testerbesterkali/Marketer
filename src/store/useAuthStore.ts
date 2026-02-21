@@ -23,14 +23,24 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ user: null, profile: null });
     },
     fetchProfile: async (userId) => {
-        const { data, error } = await supabase
-            .from('users_profile')
-            .select('*')
-            .eq('id', userId)
-            .single();
+        try {
+            const profilePromise = supabase
+                .from('users_profile')
+                .select('*')
+                .eq('id', userId)
+                .maybeSingle();
 
-        if (!error) {
-            set({ profile: data });
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Timeout fetching profile")), 10000)
+            );
+
+            const { data, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+
+            if (!error) {
+                set({ profile: data });
+            }
+        } catch (err) {
+            console.error('AuthStore: fetchProfile error:', err);
         }
     },
     deductCredits: (amount: number) => {

@@ -39,9 +39,9 @@ export const Signup = () => {
         } else {
             toast({
                 title: 'Success',
-                description: 'Account created! Please check your email for confirmation.',
+                description: 'Welcome! Redirecting you to set up your brand...',
             });
-            navigate('/login');
+            navigate('/dashboard');
         }
     };
 

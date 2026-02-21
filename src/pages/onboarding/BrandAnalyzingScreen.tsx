@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, CheckCircle2, Search, Zap, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -17,24 +18,51 @@ export const BrandAnalyzingScreen = () => {
     const workspaceId = searchParams.get('id');
     const [currentStep, setCurrentStep] = useState(0);
     const navigate = useNavigate();
+    const { toast } = useToast();
 
     useEffect(() => {
         if (!workspaceId) return;
 
-        // 1. Trigger Edge Function
+        // 1. Check if already analyzed (Resume/Refresh)
+        const checkExisting = async () => {
+            console.log('Checking if brand profile already exists for:', workspaceId);
+            const { data } = await supabase
+                .from('brand_profiles')
+                .select('id')
+                .eq('workspace_id', workspaceId)
+                .maybeSingle();
+
+            if (data) {
+                console.log('Brand profile found! Skipping to review.');
+                navigate(`/onboarding/review?id=${workspaceId}`);
+                return true;
+            }
+            return false;
+        };
+
+        // 2. Trigger Edge Function
         const triggerAnalysis = async () => {
+            const isDone = await checkExisting();
+            if (isDone) return;
+
+            console.log('Triggering new analysis Edge Function...');
             const { error } = await supabase.functions.invoke('analyze-brand', {
                 body: { workspace_id: workspaceId },
             });
 
             if (error) {
                 console.error('Analysis error:', error);
+                toast({
+                    title: 'Analysis Error',
+                    description: 'The AI extraction failed. Please try refreshing.',
+                    variant: 'destructive',
+                });
             }
         };
 
         triggerAnalysis();
 
-        // 2. Subscribe to Realtime for progress updates
+        // 3. Subscribe to Realtime for progress updates
         const channel = supabase
             .channel(`workspace:${workspaceId}`)
             .on('broadcast', { event: 'progress' }, (payload) => {
@@ -62,7 +90,7 @@ export const BrandAnalyzingScreen = () => {
             supabase.removeChannel(channel);
             clearInterval(interval);
         };
-    }, [workspaceId, navigate]);
+    }, [workspaceId, navigate, toast]);
 
     return (
         <div className="min-h-screen bg-white flex flex-col items-center justify-center overflow-hidden">

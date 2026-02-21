@@ -1,10 +1,8 @@
-import React from 'react';
 import {
     Search,
     Bell,
     Mic,
     Plus,
-    Calendar as CalendarIcon,
     ChevronRight
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';

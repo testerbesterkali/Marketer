@@ -5,7 +5,6 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import {
     Check,
     ChevronRight,
-    Info,
     Palette,
     Target,
     MessageSquare,
@@ -21,7 +20,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { motion, AnimatePresence } from 'framer-motion';
 
 export const BrandReviewScreen = () => {
     const [searchParams] = useSearchParams();
@@ -36,11 +34,14 @@ export const BrandReviewScreen = () => {
         if (!workspaceId) return;
 
         const fetchBrand = async () => {
+            console.log('BrandReviewScreen: Fetching brand profile for workspace:', workspaceId);
             const { data, error } = await supabase
                 .from('brand_profiles')
                 .select('*')
                 .eq('workspace_id', workspaceId)
-                .single();
+                .maybeSingle();
+
+            if (error) console.error('BrandReviewScreen: Fetch error:', error);
 
             if (data) {
                 setBrandProfile(data);

@@ -11,13 +11,13 @@ import {
     Facebook,
     ArrowRight,
     TrendingUp,
-    Mail,
-    PenTool,
     Loader2,
-    Sparkles
+    Sparkles,
+    Target,
+    Users,
+    MessageSquare
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 const PLATFORMS = [
     { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'text-pink-600', bg: 'bg-pink-50' },
@@ -32,8 +32,6 @@ const CONTENT_TYPES = [
     { id: 'behind-scenes', name: 'Behind the Scenes', description: 'Company culture and process.', icon: Users },
     { id: 'engagement', name: 'Audience Engagement', description: 'Polls, questions, and discussions.', icon: MessageSquare },
 ];
-
-import { Target, Users, MessageSquare } from 'lucide-react';
 
 export const ContentPlanScreen = () => {
     const [searchParams] = useSearchParams();

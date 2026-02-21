@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { Login } from '@/pages/auth/Login';
@@ -29,11 +29,11 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* Protected Routes */}
-          <Route
-            path="/dashboard/*"
-            element={
-              <AuthGuard>
+          {/* Protected Routes Wrapper */}
+          <Route element={<AuthGuard children={<Outlet />} />}>
+            <Route
+              path="/dashboard/*"
+              element={
                 <Routes>
                   <Route element={<DashboardLayout />}>
                     <Route index element={<DashboardOverview />} />
@@ -46,13 +46,11 @@ function App() {
                     <Route path="insights" element={<Insights />} />
                   </Route>
                 </Routes>
-              </AuthGuard>
-            }
-          />
-          <Route
-            path="/onboarding/*"
-            element={
-              <AuthGuard>
+              }
+            />
+            <Route
+              path="/onboarding/*"
+              element={
                 <Routes>
                   <Route path="start" element={<UrlInputScreen />} />
                   <Route path="analyzing" element={<BrandAnalyzingScreen />} />
@@ -61,9 +59,9 @@ function App() {
                   <Route path="plan" element={<ContentPlanScreen />} />
                   <Route path="generating" element={<TopicGenerationScreen />} />
                 </Routes>
-              </AuthGuard>
-            }
-          />
+              }
+            />
+          </Route>
 
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>

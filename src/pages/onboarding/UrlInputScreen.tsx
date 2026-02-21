@@ -5,7 +5,6 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Globe, ArrowRight } from 'lucide-react';
 
@@ -19,16 +18,42 @@ export const UrlInputScreen = () => {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!url) return;
+        if (!url || loading) return;
+
+        console.log('--- STARTING BRAND ANALYSIS ---');
+        console.log('Website:', url);
+        console.log('User ID from hook:', user?.id);
+        console.log('Supabase URL Configured:', !!import.meta.env.VITE_SUPABASE_URL);
 
         setLoading(true);
 
         try {
-            // 1. Create workspace
+            if (!user?.id) {
+                throw new Error('User session not found. Please log in again.');
+            }
+
+            // 1. Check for existing workspace
+            console.log('UrlInputScreen: Deduplicating workspace...');
+            const { data: existingWS } = await supabase
+                .from('workspaces')
+                .select('id')
+                .eq('owner_id', user.id)
+                .eq('website_url', url)
+                .maybeSingle();
+
+            if (existingWS) {
+                console.log('UrlInputScreen: Found existing workspace:', existingWS.id);
+                setWorkspace(existingWS);
+                navigate(`/onboarding/analyzing?id=${existingWS.id}`);
+                return;
+            }
+
+            // 2. Create workspace
+            console.log('UrlInputScreen: Creating new brand...');
             const { data: workspace, error: wsError } = await supabase
                 .from('workspaces')
                 .insert({
-                    owner_id: user?.id,
+                    owner_id: user.id,
                     name: new URL(url).hostname.replace('www.', ''),
                     website_url: url,
                     onboarding_step: 1
@@ -37,19 +62,21 @@ export const UrlInputScreen = () => {
                 .single();
 
             if (wsError) throw wsError;
+            if (!workspace) throw new Error('Failed to create workspace.');
 
             setWorkspace(workspace);
-
-            // 2. Advance to next step
+            console.log('UrlInputScreen: Navigating to analysis...');
             navigate(`/onboarding/analyzing?id=${workspace.id}`);
         } catch (error: any) {
+            console.error('CRITICAL SUBMIT ERROR:', error);
             toast({
-                title: 'Error',
-                description: error.message || 'Please enter a valid URL',
+                title: 'Something went wrong',
+                description: error.message || 'Connection failed. Please check your internet.',
                 variant: 'destructive',
             });
         } finally {
             setLoading(false);
+            console.log('--- SUBMIT END ---');
         }
     };
 

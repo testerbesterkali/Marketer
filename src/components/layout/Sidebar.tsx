@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import {
     Home,
     Calendar,
@@ -50,9 +50,76 @@ const utilityNav = [
     { icon: Shield, label: 'Help & Learn', path: '/dashboard/help' },
 ];
 
+const WorkspaceSwitcher = () => {
+    const navigate = useNavigate();
+    const { currentWorkspace, workspaces, fetchWorkspace } = useWorkspaceStore();
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <button
+                    className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors group"
+                    aria-label={`Switch workspace. Current: ${currentWorkspace?.name || 'Select Workspace'}`}
+                >
+                    <div className="flex items-center space-x-3 text-left">
+                        <div className="h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center">
+                            <span className="text-white font-bold text-xl">
+                                {currentWorkspace?.name?.[0]?.toUpperCase() || 'T'}
+                            </span>
+                        </div>
+                        <div>
+                            <p className="text-sm font-bold text-gray-900 truncate w-32">
+                                {currentWorkspace?.name || 'Select Workspace'}
+                            </p>
+                            <p className="text-[10px] font-medium text-gray-500 uppercase tracking-tighter">
+                                {currentWorkspace ? 'Active Brand' : 'No Brand Selected'}
+                            </p>
+                        </div>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
+                </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[260px] rounded-2xl p-2 bg-white shadow-2xl border-gray-100">
+                <p className="px-3 py-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">My Brands</p>
+                <div className="max-h-[300px] overflow-y-auto">
+                    {workspaces.map((ws) => (
+                        <DropdownMenuItem
+                            key={ws.id}
+                            className={cn(
+                                "rounded-xl font-bold p-3 mb-1 cursor-pointer transition-all",
+                                currentWorkspace?.id === ws.id
+                                    ? "bg-indigo-50 text-indigo-600"
+                                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                            )}
+                            onClick={() => fetchWorkspace(ws.id)}
+                        >
+                            <div className="h-8 w-8 bg-gray-100 rounded-lg flex items-center justify-center mr-3 text-xs">
+                                {ws.name?.[0]?.toUpperCase()}
+                            </div>
+                            <span className="truncate flex-1">{ws.name}</span>
+                            {currentWorkspace?.id === ws.id && (
+                                <Zap className="h-3 w-3 fill-indigo-600 text-indigo-600 ml-2" />
+                            )}
+                        </DropdownMenuItem>
+                    ))}
+                </div>
+
+                <div className="h-px bg-gray-100 my-2" />
+
+                <DropdownMenuItem
+                    className="rounded-xl font-black p-3 text-indigo-600 hover:bg-indigo-50 cursor-pointer flex items-center justify-center group/btn"
+                    onClick={() => navigate('/onboarding/start')}
+                >
+                    <Plus className="h-4 w-4 mr-2 group-hover/btn:rotate-90 transition-transform" />
+                    CREATE NEW BRAND
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+};
+
 export const Sidebar = () => {
     const { profile, signOut } = useAuthStore();
-    const { currentWorkspace } = useWorkspaceStore();
 
     const credits = profile?.credits_remaining ?? 0;
     const maxCredits = 200;
@@ -66,35 +133,7 @@ export const Sidebar = () => {
         >
             {/* Workspace Switcher */}
             <div className="p-6">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <button
-                            className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 hover:bg-gray-100 transition-colors group"
-                            aria-label={`Switch workspace. Current: ${currentWorkspace?.name || 'Select Workspace'}`}
-                        >
-                            <div className="flex items-center space-x-3 text-left">
-                                <div className="h-10 w-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-                                    <span className="text-white font-bold text-xl"> TRACKLY </span>
-                                </div>
-                                <div>
-                                    <p className="text-sm font-bold text-gray-900 truncate w-32">
-                                        {currentWorkspace?.name || 'Select Workspace'}
-                                    </p>
-                                    <p className="text-[10px] font-medium text-gray-500 uppercase tracking-tighter">
-                                        Personal Workspace
-                                    </p>
-                                </div>
-                            </div>
-                            <ChevronDown className="h-4 w-4 text-gray-400 group-hover:text-indigo-600 transition-colors" />
-                        </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" className="w-[240px] rounded-2xl p-2">
-                        <DropdownMenuItem className="rounded-xl font-medium p-3">
-                            <Plus className="h-4 w-4 mr-2" />
-                            New Workspace
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                <WorkspaceSwitcher />
             </div>
 
             {/* Navigation */}
