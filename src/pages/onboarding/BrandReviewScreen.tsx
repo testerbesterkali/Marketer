@@ -10,7 +10,9 @@ import {
     MessageSquare,
     Globe,
     Loader2,
-    Save
+    Save,
+    BookOpen,
+    Edit2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -39,6 +41,8 @@ export const BrandReviewScreen = () => {
                 .from('brand_profiles')
                 .select('*')
                 .eq('workspace_id', workspaceId)
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
             if (error) console.error('BrandReviewScreen: Fetch error:', error);
@@ -97,8 +101,9 @@ export const BrandReviewScreen = () => {
                 </div>
 
                 <Tabs defaultValue="identity" className="w-full">
-                    <TabsList className="grid w-full max-w-md grid-cols-2 h-12 bg-white border border-gray-100 p-1 rounded-xl shadow-sm">
+                    <TabsList className="grid w-full max-w-2xl grid-cols-3 h-12 bg-white border border-gray-100 p-1 rounded-xl shadow-sm">
                         <TabsTrigger value="identity" className="rounded-lg font-bold data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Brand Core</TabsTrigger>
+                        <TabsTrigger value="story" className="rounded-lg font-bold data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Brand Story</TabsTrigger>
                         <TabsTrigger value="guidelines" className="rounded-lg font-bold data-[state=active]:bg-indigo-600 data-[state=active]:text-white transition-all">Voice & Tone</TabsTrigger>
                     </TabsList>
 
@@ -167,6 +172,71 @@ export const BrandReviewScreen = () => {
                                 </CardContent>
                             </Card>
                         </div>
+                    </TabsContent>
+
+                    <TabsContent value="story" className="mt-8">
+                        <Card className="border-none shadow-sm rounded-3xl overflow-hidden">
+                            <CardHeader className="p-8 border-b border-gray-50 flex flex-row items-center justify-between">
+                                <div className="flex items-center space-x-3">
+                                    <div className="h-8 w-8 rounded-lg bg-emerald-50 flex items-center justify-center">
+                                        <BookOpen className="h-4 w-4 text-emerald-600" />
+                                    </div>
+                                    <CardTitle className="text-xl font-extrabold text-gray-900">The {brandProfile?.business_name || 'Brand'} Story</CardTitle>
+                                </div>
+                                <Button variant="ghost" size="sm" className="text-gray-500 font-bold hover:bg-gray-50 rounded-xl">
+                                    <Edit2 className="h-4 w-4 mr-2" /> Edit
+                                </Button>
+                            </CardHeader>
+                            <CardContent className="p-8 space-y-10">
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-gray-900">The Hero's Journey</h3>
+                                    <p className="text-gray-600 leading-relaxed font-medium">
+                                        {brandProfile?.brand_story || "Your brand's origin story will appear here once analyzed."}
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-gray-900">Mission Statement</h3>
+                                    <p className="text-gray-600 leading-relaxed font-medium italic">
+                                        "{brandProfile?.mission_statement || "Your core mission."}"
+                                    </p>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-gray-900">Brand Personality</h3>
+                                    <ul className="space-y-4 text-gray-600 font-medium">
+                                        <li className="flex items-start">
+                                            <span className="font-bold text-gray-900 w-28 shrink-0">Archetype:</span>
+                                            <span>{brandProfile?.archetype || 'The Creator'}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-bold text-gray-900 w-28 shrink-0">Voice:</span>
+                                            <span>{brandProfile?.brand_voice || 'Professional and informative'}</span>
+                                        </li>
+                                        <li className="flex items-start">
+                                            <span className="font-bold text-gray-900 w-28 shrink-0">Values:</span>
+                                            <span>{(brandProfile?.core_values || []).join(', ') || 'Innovation, Quality, Service'}</span>
+                                        </li>
+                                    </ul>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <h3 className="text-lg font-bold text-gray-900">Emotional Benefits</h3>
+                                    <ul className="space-y-4 text-gray-600 font-medium">
+                                        {brandProfile?.emotional_benefits && Object.keys(brandProfile.emotional_benefits).length > 0 ? (
+                                            Object.entries(brandProfile.emotional_benefits).map(([key, value]) => (
+                                                <li key={key} className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-3">
+                                                    <span className="font-bold text-gray-900 capitalize min-w-[140px] shrink-0">{key.replace(/_/g, ' ')}:</span>
+                                                    <span>{String(value)}</span>
+                                                </li>
+                                            ))
+                                        ) : (
+                                            <li className="flex items-start text-gray-500 italic">No emotional benefits extracted.</li>
+                                        )}
+                                    </ul>
+                                </div>
+                            </CardContent>
+                        </Card>
                     </TabsContent>
 
                     <TabsContent value="guidelines" className="mt-8">

@@ -30,6 +30,8 @@ export const BrandAnalyzingScreen = () => {
                 .from('brand_profiles')
                 .select('id')
                 .eq('workspace_id', workspaceId)
+                .order('created_at', { ascending: false })
+                .limit(1)
                 .maybeSingle();
 
             if (data) {

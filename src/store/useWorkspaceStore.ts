@@ -91,6 +91,8 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
                     .from('brand_profiles')
                     .select('*')
                     .eq('workspace_id', id)
+                    .order('created_at', { ascending: false })
+                    .limit(1)
                     .maybeSingle();
 
                 set({
