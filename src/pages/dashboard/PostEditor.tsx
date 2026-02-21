@@ -70,6 +70,33 @@ export const PostEditor = ({ postId, isOpen, onClose }: PostEditorProps) => {
         setSaving(false);
     };
 
+    const handleRegenerate = async () => {
+        if (!post) return;
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.functions.invoke('generate-post', {
+                body: { post_id: post.id }
+            });
+
+            if (!error && data.success) {
+                // Refresh post data
+                const { data: updatedPost } = await supabase
+                    .from('posts')
+                    .select('*, topics(*)')
+                    .eq('id', post.id)
+                    .single();
+
+                if (updatedPost) {
+                    setPost(updatedPost);
+                    setCaption(updatedPost.caption || '');
+                }
+            }
+        } catch (err) {
+            console.error('Regeneration failed:', err);
+        }
+        setLoading(false);
+    };
+
     const PlatformIcon = post ? PLATFORM_ICONS[post.platform] || Instagram : Instagram;
 
     return (
@@ -140,7 +167,10 @@ export const PostEditor = ({ postId, isOpen, onClose }: PostEditorProps) => {
                                                 className="w-full h-full object-cover"
                                             />
                                             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                                <Button className="bg-white text-gray-900 hover:bg-gray-100 font-bold rounded-xl space-x-2">
+                                                <Button
+                                                    onClick={handleRegenerate}
+                                                    className="bg-white text-gray-900 hover:bg-gray-100 font-bold rounded-xl space-x-2"
+                                                >
                                                     <RefreshCcw className="h-4 w-4" />
                                                     <span>Regenerate Image</span>
                                                 </Button>
@@ -152,7 +182,10 @@ export const PostEditor = ({ postId, isOpen, onClose }: PostEditorProps) => {
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between">
                                             <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Caption & Hashtags</Label>
-                                            <button className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition-colors flex items-center space-x-1">
+                                            <button
+                                                onClick={handleRegenerate}
+                                                className="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full hover:bg-indigo-100 transition-colors flex items-center space-x-1"
+                                            >
                                                 <Sparkles className="h-3 w-3" />
                                                 <span>AI Rewrite</span>
                                             </button>

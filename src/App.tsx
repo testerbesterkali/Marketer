@@ -13,6 +13,8 @@ import { AuthGuard } from '@/components/layout/AuthGuard';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { DashboardOverview } from '@/pages/dashboard/DashboardOverview';
 import { CalendarView } from '@/pages/dashboard/CalendarView';
+import { BrandKit } from '@/pages/dashboard/BrandKit';
+import { Insights } from '@/pages/dashboard/Insights';
 
 const queryClient = new QueryClient();
 
@@ -34,9 +36,9 @@ function App() {
                     <Route index element={<DashboardOverview />} />
                     <Route path="calendar" element={<CalendarView />} />
                     <Route path="approvals" element={<div className="p-8 text-2xl font-bold">Content Approvals</div>} />
-                    <Route path="brand-kit" element={<div className="p-8 text-2xl font-bold">Brand Identity Kit</div>} />
+                    <Route path="brand-kit" element={<BrandKit />} />
                     <Route path="content-plan" element={<div className="p-8 text-2xl font-bold">Content Strategy</div>} />
-                    <Route path="insights" element={<div className="p-8 text-2xl font-bold">Performance Insights</div>} />
+                    <Route path="insights" element={<Insights />} />
                   </Route>
                 </Routes>
               </AuthGuard>
