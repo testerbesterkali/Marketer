@@ -12,7 +12,8 @@ import {
     Users,
     LogOut,
     ChevronDown,
-    Plus
+    Plus,
+    Share2
 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
@@ -29,6 +30,7 @@ import { Button } from '@/components/ui/button';
 const navItems = [
     { icon: Home, label: 'Overview', path: '/dashboard' },
     { icon: Calendar, label: 'Calendar', path: '/dashboard/calendar' },
+    { icon: Share2, label: 'Integrations', path: '/dashboard/integrations' },
     { icon: CheckCircle, label: 'Approvals', path: '/dashboard/approvals' },
     { icon: Target, label: 'Content Plan', path: '/dashboard/content-plan' },
     { icon: Megaphone, label: 'Paid Ads', path: '/dashboard/paid-ads' },

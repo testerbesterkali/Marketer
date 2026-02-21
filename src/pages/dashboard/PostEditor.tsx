@@ -8,8 +8,10 @@ import {
     Instagram,
     Linkedin,
     Twitter,
-    Facebook
+    Facebook,
+    CheckCircle2
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
@@ -34,6 +36,8 @@ export const PostEditor = ({ postId, isOpen, onClose }: PostEditorProps) => {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [caption, setCaption] = useState('');
+    const [scheduledTime, setScheduledTime] = useState('');
+    const [scheduledSuccess, setScheduledSuccess] = useState(false);
 
     useEffect(() => {
         if (!postId || !isOpen) return;
@@ -65,7 +69,34 @@ export const PostEditor = ({ postId, isOpen, onClose }: PostEditorProps) => {
             .eq('id', post.id);
 
         if (!error) {
+            toast.success('Post changes saved!');
             onClose();
+        }
+        setSaving(false);
+    };
+
+    const handleSchedule = async () => {
+        if (!post || !scheduledTime) {
+            toast.error('Please select a time to schedule');
+            return;
+        }
+        setSaving(true);
+        const { error } = await supabase
+            .from('posts')
+            .update({
+                status: 'scheduled',
+                scheduled_at: new Date(scheduledTime).toISOString()
+            })
+            .eq('id', post.id);
+
+        if (!error) {
+            setScheduledSuccess(true);
+            toast.success('Post scheduled successfully!');
+            setTimeout(() => {
+                onClose();
+            }, 1500);
+        } else {
+            toast.error('Failed to schedule post');
         }
         setSaving(false);
     };
@@ -90,9 +121,11 @@ export const PostEditor = ({ postId, isOpen, onClose }: PostEditorProps) => {
                     setPost(updatedPost);
                     setCaption(updatedPost.caption || '');
                 }
+                toast.success('Content regenerated!');
             }
         } catch (err) {
             console.error('Regeneration failed:', err);
+            toast.error('Failed to regenerate content');
         }
         setLoading(false);
     };
@@ -197,6 +230,43 @@ export const PostEditor = ({ postId, isOpen, onClose }: PostEditorProps) => {
                                             className="min-h-[200px] border-gray-100 bg-gray-50/50 focus:bg-white rounded-2xl p-4 font-medium leading-relaxed text-gray-700"
                                         />
                                     </div>
+
+                                    {/* Scheduling Section */}
+                                    <div className="pt-6 border-t border-gray-100 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-xs font-bold text-gray-400 uppercase tracking-widest">Schedule Publishing</Label>
+                                            <Badge className="bg-green-50 text-green-700 border-none font-bold text-[10px] px-2 py-0.5 rounded-full uppercase tracking-tighter">AI Optimized</Badge>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 gap-4">
+                                            <div className="relative">
+                                                <Clock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-indigo-400" />
+                                                <input
+                                                    type="datetime-local"
+                                                    value={scheduledTime}
+                                                    onChange={(e) => setScheduledTime(e.target.value)}
+                                                    className="w-full h-14 bg-gray-50 border border-gray-100 rounded-2xl pl-12 pr-4 font-bold text-gray-700 focus:bg-white focus:ring-2 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                                />
+                                            </div>
+
+                                            <Button
+                                                onClick={handleSchedule}
+                                                disabled={!scheduledTime || saving || scheduledSuccess}
+                                                className={cn(
+                                                    "w-full h-14 font-black rounded-2xl shadow-xl transition-all flex items-center justify-center space-x-2",
+                                                    scheduledSuccess
+                                                        ? "bg-green-600 hover:bg-green-700 text-white shadow-green-100"
+                                                        : "bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-100"
+                                                )}
+                                            >
+                                                {scheduledSuccess ? (
+                                                    <><CheckCircle2 className="h-5 w-5" /><span>Scheduled!</span></>
+                                                ) : (
+                                                    <><Clock className="h-5 w-5" /><span>Schedule Post</span></>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
@@ -234,4 +304,8 @@ const Label = ({ children, className }: { children: React.ReactNode, className?:
     </p>
 );
 
-import { CheckCircle2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+
+export const Clock = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+);
